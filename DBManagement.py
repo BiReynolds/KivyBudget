@@ -61,7 +61,10 @@ class QueryBillType():
         insertString = f"INSERT INTO BillType (name,amount,nextDue,incType,incDays,incMonths,incYears,category,constant) VALUES ({billTypeObj.name},{billTypeObj.amount},{billTypeObj.nextDue},{billTypeObj.incType},{billTypeObj.incDays},{billTypeObj.incMonths},{billTypeObj.incYears},{billTypeObj.category},{billTypeObj.constant})"
         con = sqlite3.connect("KivyBudget.db")
         cur = con.cursor()
-        cur.execute(insertString)
+        try:
+            cur.execute(insertString)
+        except sqlite3.Error as er:
+            print(f"Could not insert {billTypeObj.name} into table BillType.  Error received: ",er)
         cur.close()
         con.commit()
         con.close()
@@ -73,7 +76,12 @@ class QueryBillType():
             insertData.append((bill.name,bill.amount,bill.nextDue,bill.incType,bill.incDays,bill.incMonths,bill.incYears,bill.category,bill.constant))
         con = sqlite3.connect("KivyBudget.db")
         cur = con.cursor()
-        cur.executemany(insertString,insertData)
+        cur.execute('begin')
+        try:
+            cur.executemany(insertString,insertData)
+        except sqlite3.IntegrityError as err:
+            cur.execute('rollback')
+            print("insertMany could not be completed due to database error: ",err)
         cur.close()
         con.commit()
         con.close()
@@ -113,7 +121,11 @@ class QueryBillsAndIncome():
                 newBills.append((newBill.billTypeId,newBill.name,newBill.amount,newBill.dueDate,newBill.category,newBill.constant))
         con = sqlite3.connect("KivyBudget.db")
         cur = con.cursor()
-        cur.executemany("INSERT INTO BillsAndIncome (billTypeId, name, amount, dueDate, category, constant) VALUES (?,?,?,?,?,?)",newBills)
+        cur.execute('begin')
+        try:
+            cur.executemany("INSERT INTO BillsAndIncome (billTypeId, name, amount, dueDate, category, constant) VALUES (?,?,?,?,?,?)",newBills)
+        except sqlite3.IntegrityError as err:
+            cur.execute('rollback')
         cur.close()
         con.commit()
         con.close()

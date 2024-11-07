@@ -1,0 +1,121 @@
+#:kivy 2.1
+
+##--------------- Views
+
+<UpcomingBillsView>:
+    dataBox:dataBox
+    nameCol:nameCol
+    amountCol:amountCol
+    dueDateCol:dueDateCol
+    categoryCol:categoryCol
+
+    StackLayout:
+        id:colHeaders
+        orientation:'lr-tb'
+        pos_hint:{'x':0,'y':10/11}
+        size_hint:1,1/11
+        Button:
+            text:'Name'
+            size_hint_x: 0.25
+        Button:
+            text:'Amount'
+            size_hint_x: 0.25
+        Button:
+            text:'Due Date'
+            size_hint_x: 0.25
+        Button:
+            text:'Category'
+            size_hint_x: 0.25
+
+    ScrollView:
+        id: scrollBox
+        do_scroll_x: False
+        do_scroll_y: True
+
+        pos_hint:{'x':0,'top':10/11}
+        size_hint:1,10/11
+
+        GridLayout:
+            rows:1
+            id:dataBox
+            orientation:'lr-tb'
+            pos_hint:{'x':0,'top':1}
+            size_hint_x: 1
+            size_hint_y: None
+            height:self.minimum_height
+            
+            GridLayout:
+                cols:1
+                id:nameCol
+                orientation:'tb-lr'
+                size_hint: 0.25,None
+                height:self.minimum_height
+
+            GridLayout:
+                cols:1
+                id:amountCol
+                orientation:'tb-lr'
+                size_hint: 0.25,None
+                height:self.minimum_height
+
+            GridLayout:
+                cols:1
+                id:dueDateCol
+                orientation:'tb-lr'
+                size_hint: 0.25,None
+                height:self.minimum_height
+
+            GridLayout:
+                cols:1
+                id:categoryCol
+                orientation:'tb-lr'
+                size_hint: 0.25,None
+                height:self.minimum_height
+
+
+##--------------- Basic Layout Pieces
+<TopBar>:
+    titleLabel:titleLabel
+
+    Label:
+        id:titleLabel
+        text:root.title
+
+        color: [1,1,1,1]
+        text_size: self.width-20, self.height
+        halign: 'left'
+        valign: 'middle'
+
+<SideBar>:
+
+
+<SelectedView>:
+
+##--------------- MainWindow Definition
+<MainWindow>:
+    pos:root.pos
+    size:root.size
+    topBar: topBar
+    sideBar:sideBar
+    selectedView:selectedView
+
+    TopBar:
+        id: topBar
+        pos_hint: {'x':0,'y':0.9}
+        size_hint:(1,0.1)
+
+    SideBar:
+        id:sideBar
+        pos_hint:{'x':1,'y':0}
+        size_hint: 0.1,0.9
+
+    SelectedView:
+        id:selectedView
+        pos_hint:{'x':0,'y':0}
+        size_hint:1,0.9
+        currentView:currentView
+
+        UpcomingBillsView:
+            id: currentView
+            pos_hint:{'x':0,'y':0}
+            size_hint:1,1
