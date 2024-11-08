@@ -95,7 +95,20 @@ class QueryBillsAndIncome():
         cur.close()
         con.close()
         return res
-    
+
+    def getTopNByDueDate(N=100):
+        sqlString = f"SELECT * FROM BillsAndIncome ORDER BY date(dueDate) LIMIT {N}"
+        con = sqlite3.connect("KivyBudget.db")
+        cur = con.cursor()
+        cur.execute(sqlString)
+        raw_data = cur.fetchall()
+        cur.close()
+        con.close()
+        res=[]
+        for row in raw_data:
+            res.append(Bill(row[1],row[2],row[3],row[4],row[5],row[6],row[0]))
+        return res
+
     def byBillTypeIdAndDueDates(billTypeId,dateString):
         queryString = f"SELECT dueDate FROM BillsAndIncome WHERE billTypeId = {billTypeId} AND dueDate in ('{dateString[0]}'"
         for dueDate in dateString[1:]:

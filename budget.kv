@@ -1,13 +1,18 @@
 #:kivy 2.1
+<Label>:
+    text_size: self.width,None
+    halign:'center'
+    valign:'center'
 
 ##--------------- Views
+
 
 <UpcomingBillsView>:
     dataBox:dataBox
     nameCol:nameCol
     amountCol:amountCol
     dueDateCol:dueDateCol
-    categoryCol:categoryCol
+    rollBalCol:rollBalCol
 
     StackLayout:
         id:colHeaders
@@ -24,7 +29,7 @@
             text:'Due Date'
             size_hint_x: 0.25
         Button:
-            text:'Category'
+            text:'Rolling Balance'
             size_hint_x: 0.25
 
     ScrollView:
@@ -67,7 +72,7 @@
 
             GridLayout:
                 cols:1
-                id:categoryCol
+                id:rollBalCol
                 orientation:'tb-lr'
                 size_hint: 0.25,None
                 height:self.minimum_height
