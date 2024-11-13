@@ -6,17 +6,32 @@ def db_setup():
     ## Initiate a connection to db
     con = sqlite3.connect("KivyBudget.db")
     cur = con.cursor()
+
+    ## Create UserInfo table.  This will store miscellaneous info about the user.  For now, we only allow a single user 
+    ## so this db will act mostly like a dictionary.  There are only two columns: name (the name of the attribute) and value
+    ## (the value of said attribute).  Later we will likely allow more than one user per instance of this application, and
+    ## so we will add a more robust solution 
+    cur.execute("CREATE TABLE if not exists UserInfo(id INTEGER PRIMARY KEY, name TEXT UNIQUE, value TEXT)")
+    ## Below, we insert a default value for any properties we've established thus far 
+    try:
+        cur.execute("INSERT INTO UserInfo (name,value) VALUES ('currentBalance','0.00')")
+    except:
+        print("Couldn't insert userinfo data")
+
     ## Create Category table
     cur.execute("CREATE TABLE if not exists Category(id INTEGER PRIMARY KEY, name TEXT UNIQUE)")
+
     ## Create BillType table and indices for that table
     cur.execute("CREATE TABLE if not exists BillType(id INTEGER PRIMARY KEY, name TEXT UNIQUE, amount REAL, nextDue TEXT, incType INTEGER, incDays INTEGER, incMonths INTEGER, incYears INTEGER, category INTEGER, constant INTEGER, FOREIGN KEY(category) REFERENCES Category(id))")
     cur.execute("CREATE INDEX if not exists bill_type_nextDue_idx ON BillType (nextDue)")
     cur.execute("CREATE INDEX if not exists bill_type_category_idx ON BillType (category)")
+
     ## Create BillsAndIncome table and indices for that table
     cur.execute("CREATE TABLE if not exists BillsAndIncome(id INTEGER PRIMARY KEY,billTypeId INTEGER, name TEXT, amount INTEGER, dueDate TEXT, category INTEGER, constant INTEGER, FOREIGN KEY(billTypeId) REFERENCES BillType(id))")
     cur.execute("CREATE INDEX if not exists bills_and_income_dueDate_idx ON BillsAndIncome (dueDate)")
     cur.execute("CREATE INDEX if not exists bills_and_income_category_idx ON BillsAndIncome (category)")
     cur.execute("CREATE INDEX if not exists bills_and_income_billTypeId_idx ON BillsAndIncome (billTypeId)")
+
     ## Commit changes and close connection
     cur.close()
     con.commit()
@@ -139,6 +154,32 @@ class QueryBillsAndIncome():
             cur.executemany("INSERT INTO BillsAndIncome (billTypeId, name, amount, dueDate, category, constant) VALUES (?,?,?,?,?,?)",newBills)
         except sqlite3.IntegrityError as err:
             cur.execute('rollback')
+        cur.close()
+        con.commit()
+        con.close()
+
+    def deleteByIds(ids):
+        setOfIds = "("+",".join(ids)+")"
+        con = sqlite3.connect("KivyBudget.db")
+        cur = con.cursor()
+        cur.execute("DELETE FROM BillsAndIncome WHERE id in "+setOfIds)
+        cur.close()
+        con.commit()
+        con.close()
+
+## Likely a temporary class which will be replaced when we add better user support
+class GetUserInfo():
+    def getCurrentBalance():
+        con = sqlite3.connect("KivyBudget.db")
+        cur = con.cursor()
+        cur.execute("SELECT value FROM UserInfo WHERE name = 'currentBalance'")
+        currBal = float(cur.fetchone()[0])
+        return currBal
+    
+    def setCurrentBalance(newCurrentBalance):
+        con = sqlite3.connect("KivyBudget.db")
+        cur = con.cursor()
+        cur.execute(f"UPDATE UserInfo SET value='{newCurrentBalance}' WHERE name='currentBalance'")
         cur.close()
         con.commit()
         con.close()

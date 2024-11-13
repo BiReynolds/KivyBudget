@@ -1,4 +1,5 @@
 import kivy 
+import re
 kivy.require('2.1.0')
 from kivy.uix.widget import Widget
 from kivy.uix.stacklayout import StackLayout
@@ -8,10 +9,24 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
+from kivy.uix.textinput import TextInput
 from kivy.properties import ObjectProperty
 
 from DBManagement import db_setup, load_test_data,QueryBillType,QueryBillsAndIncome
 from models import IncType,BillType,Bill
+
+## Special widgets
+
+class MoneyInput(TextInput):
+    pat = re.compile('[^0-9]')
+
+    def insert_text(self,substring,from_undo=False):
+        pat = self.pat
+        if '.' in self.text:
+            s=re.sub(pat,'',substring)
+        else:
+            s='.'.join(re.sub(pat,'',s) for s in substring.split('.',1))
+        return super().insert_text(s,from_undo = from_undo)
 
 class DataButton(Button):
     def __init__(self,dataIdx,colIdx=0,**kwargs):
@@ -74,15 +89,12 @@ class DataGrid(BoxLayout):
                     newLayout.add_widget(Label(text=str(point),size_hint_x=1/N))
             for i,action in enumerate(self.actionCols):
                 actionButton = DataButton(colIdx=i,dataIdx = data[0], text = action,size_hint_x = 1/N)
-                actionButton.bind(on_press=lambda obj: self.actions[obj.colIdx](obj.dataIdx))
+                actionButton.bind(on_press=lambda obj: self.actions[obj.colIdx](obj))
                 newLayout.add_widget(actionButton)
 
         self.add_widget(headerBar)
         scrollView.add_widget(newLayout)
         self.add_widget(scrollView)
-
-    def headerClicked(self):
-        pass
 
     def sortBy(self,idx):
         if self.hasIndex:
@@ -92,25 +104,13 @@ class DataGrid(BoxLayout):
         self.presentData = workingData
         self.reloadData()
 
-class UpcomingBillsView(FloatLayout):
+## General Layout widgets
 
-    def loadStuff(self):
-        headers = ['Name','Amount','Due Date','Rolling Balance']
-        queryData = QueryBillsAndIncome.getTopNByDueDate()
-        tableData = []
-        rollBal = 1000
-        for bill in queryData:
-            rollBal += bill.amount
-            tableData.append((bill.id,bill.name,bill.amount,bill.dueDate,rollBal))
-        self.data = tableData
-        actionCols = ['Mark Paid','Edit']
-        actions = [lambda x:print(f"Marked bill {x} paid!"),lambda x:print(f"Edit bill {x}")]
-
-        self.add_widget(DataGrid(headers,tableData,actionCols=actionCols,actions=actions,hasindex=True))
-            
-class TopBar(StackLayout):
+class TopBar(BoxLayout):
     title = "Default Title"
     titleLabel = ObjectProperty(None)
+    amountInput = ObjectProperty(None)
+    saveButton = ObjectProperty(None)
 
 class SideBar(StackLayout):
     pass
@@ -118,6 +118,8 @@ class SideBar(StackLayout):
 class SelectedView(FloatLayout):
     pass
 
+
+## The big widget that holds everything
 class MainWindow(FloatLayout):
     topBar = ObjectProperty(None)
     sideBar = ObjectProperty(None)

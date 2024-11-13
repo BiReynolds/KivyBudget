@@ -11,15 +11,33 @@
 ##--------------- Basic Layout Pieces
 <TopBar>:
     titleLabel:titleLabel
+    amountInput:amountInput
+    saveButton:saveButton
+    orientation: 'horizontal'
 
     Label:
         id:titleLabel
         text:root.title
 
         color: [1,1,1,1]
+        size_hint: 3/7,1
         text_size: self.width-20, self.height
         halign: 'left'
         valign: 'middle'
+
+    MoneyInput:
+        id:amountInput
+        text: '1000.00'
+        multiline: False
+        size_hint: 2/7,0.35
+        pos_hint:{'x':0.5,'center_y':0.5}
+
+    Button:
+        id: saveButton
+        text: 'Save Changes'
+        size_hint: 2/7,0.35
+        center_y:self.center_y
+        pos_hint:{'x':0.5,'center_y':0.5}
 
 <SideBar>:
 

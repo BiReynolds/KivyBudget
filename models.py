@@ -61,3 +61,4 @@ class Bill():
         self.dueDate = dueDate
         self.category = category
         self.constant = constant
+        self.paidInSession = False
