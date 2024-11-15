@@ -23,10 +23,10 @@ from models import IncType,BillType,Bill
 ## Special widgets
 
 class EasyDropDown(Button):
-    options = DropDown()
     
     def __init__(self,optionList,defaultText = 'Select',**kwargs):
         super().__init__(**kwargs)
+        self.options = DropDown()
         self.text = defaultText
 
         for option in optionList:
@@ -38,16 +38,17 @@ class EasyDropDown(Button):
         self.options.bind(on_select=lambda instance, x: setattr(self,'text',x)) 
 
 class DateField(BoxLayout):
-    orientation = 'horizontal'
-    monthField = Button()
-    monthOptions = DropDown()
-    dayField = Button()
-    dayOptions = DropDown()
-    yearField = Button()
-    yearOptions = DropDown()
 
     def __init__(self,defaultMonth = 'MM',defaultDay = 'DD', defaultYear='YYYY',minYear = 1900, maxYear = 2100,**kwargs):
         super().__init__(**kwargs)
+
+        self.orientation = 'horizontal'
+        self.monthField = Button()
+        self.monthOptions = DropDown()
+        self.dayField = Button()
+        self.dayOptions = DropDown()
+        self.yearField = Button()
+        self.yearOptions = DropDown()
         
         self.monthField.text = defaultMonth
         self.dayField.text = defaultDay
@@ -91,10 +92,17 @@ class DateField(BoxLayout):
         self.dayField.text = 'DD'
         self.yearField.text = 'YY'
 
+    def setField(self,date):
+        self.monthField.text = str(date.month)
+        self.dayField.text = str(date.day)
+        self.yearField.text = str(date.year)
+
 class MoneyInput(TextInput):
-    pat = re.compile('[^0-9]')
-    multiline = False
-    write_tab = False
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
+        self.pat = re.compile('[^0-9]')
+        self.multiline = False
+        self.write_tab = False
 
     def insert_text(self,substring,from_undo=False):
         pat = self.pat
@@ -111,9 +119,10 @@ class DataButton(Button):
         self.dataIdx = dataIdx
 
 class DataGrid(BoxLayout):
-    orientation = 'vertical'
 
     def __init__(self,headers,data,row_height = 50,actionCols=[],actions=[], hasIndex=True, **kwargs):
+        self.orientation = 'vertical'
+
         if not hasIndex and len(headers)!=len(data[0]):
             print("Data width does not match headers")
             return
@@ -182,8 +191,8 @@ class DataGrid(BoxLayout):
 
 class BillForm(GridLayout):
 
-    def __init__(self,id=None,name=None,amount=None,nextDue=None,incType=None,incDays=None,incMonths=None,incYears=None,category=None,constant=None):
-        super().__init__()
+    def __init__(self,id=None,name=None,amount=None,nextDue=None,incType=None,incDays=None,incMonths=None,incYears=None,category=None,constant=None,**kwargs):
+        super().__init__(**kwargs)
         self.orientation = 'lr-tb'
         self.cols = 2
         self.row_force_default = True
@@ -206,15 +215,15 @@ class BillForm(GridLayout):
         if incType:
             match incType:
                 case -1:
-                    self.incTypefield = 'None'
+                    self.incTypeField.text = 'None'
                     self.incAmountField.text = 0
-                case 1:
+                case 0:
                     self.incTypeField.text = 'Day'
                     self.incAmountField.text = str(incDays)
-                case 2:
+                case 1:
                     self.incTypeField.text = 'Month'
                     self.incAmountField.text = str(incMonths)
-                case 3:
+                case 2:
                     self.incTypeField.text = 'Year'
                     self.incAmountField.text = str(incYears)
 

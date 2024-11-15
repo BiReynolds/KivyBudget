@@ -9,15 +9,66 @@ import kivy
 kivy.require('2.1.0')
 from kivy.app import App
 from kivy.core.window import Window
-from kivy.clock import Clock
+from kivy.uix.button import Button
 
 from datetime import date
 
+## Helper functions
+def editClicked(obj):
+    app.getEditBillView(obj.dataIdx)
+
+
+## View Functions
+
 class AddBillView(Screen):
     def __init__(self):
-        self.form = BillForm()
         super().__init__(name='Add Bill')
+        self.form = BillForm()
         self.add_widget(self.form)
+
+class EditBillView(Screen):
+    def __init__(self):
+        super().__init__(name='Edit Bill')
+        self.billObj = None
+        self.form = BillForm()
+        self.deleteButton = Button(text="Delete This Bill")
+        self.deleteFutureButton = Button(text="Delete All Future Instances")
+        self.form.add_widget(self.deleteButton)
+        self.form.add_widget(self.deleteFutureButton)
+        self.add_widget(self.form)
+
+    def loadBillData(self,billId):
+        billObj = QueryBillsAndIncome.byId(billId)
+        billTypeObj = None
+        if billObj.billTypeId:
+            billTypeObj = QueryBillType.byId(billObj.billTypeId)
+        self.billObj = billObj
+        self.billTypeObj = billTypeObj
+        self.form.nameField.text = billObj.name
+        self.form.amountField.text = str(billObj.amount)
+        self.form.nextDueField.setField(date.fromisoformat(billObj.dueDate))
+        if billTypeObj:
+            match billTypeObj.incType:
+                    case -1:
+                        self.form.incTypeField.text = 'None'
+                        self.form.incAmountField.text = ''
+                    case 0:
+                        self.form.incTypeField.text = 'Day'
+                        self.form.incAmountField.text = str(billTypeObj.incDays)
+                    case 1:
+                        self.form.incTypeField.text = 'Month'
+                        self.form.incAmountField.text = str(billTypeObj.incMonths)
+                    case 2:
+                        self.form.incTypeField.text = 'Year'
+                        self.form.incAmountField.text = str(billTypeObj.incYears)
+        else:
+            self.form.incTypeField.text = 'None'
+            self.form.incAmountField.text = ''
+        self.form.incTypeField.disabled = True
+        self.form.incAmountField.readonly = True
+
+        self.form.categoryField.text = str(billObj.category)
+        self.form.constantField.text = str(billObj.constant)
 
 class UpcomingBillsView(Screen):
     def __init__(self):
@@ -27,7 +78,7 @@ class UpcomingBillsView(Screen):
         headers = ['Name','Amount','Due Date','Rolling Balance','Paid?']
         tableData = self.makeTableData()
         actionCols = ['Mark Paid','Edit']
-        actions = [self.togglePaid,lambda x:print(f"Edit bill {x}")]
+        actions = [self.togglePaid,editClicked]
         self.grid = DataGrid(headers,tableData,actionCols=actionCols,actions=actions,hasIndex=True)
         super().__init__(name='Upcoming Bills')
         self.add_widget(self.grid)
@@ -85,6 +136,7 @@ class BudgetApp(App):
         self.mainWindow = MainWindow()
         self.mainWindow.selectedView.add_widget(UpcomingBillsView())
         self.mainWindow.selectedView.add_widget(AddBillView())
+        self.mainWindow.selectedView.add_widget(EditBillView())
         self.getUpcomingBillsView()
         return self.mainWindow
 
@@ -157,7 +209,49 @@ class BudgetApp(App):
         form.constantField.active = False
         self.getUpcomingBillsView()
 
+    def getEditBillView(self,id):
+        self.mainWindow.selectedView.current = 'Edit Bill'
+        # Change Title
+        self.mainWindow.topBar.titleLabel.text = "Edit Bill"
+        # Make Amount read-only
+        self.mainWindow.topBar.amountInput.readonly = True
+        # Load info for the selected bill to edit by default
+        self.mainWindow.selectedView.current_screen.loadBillData(id)
+        # Bind the form buttons to the correct actions
+        self.mainWindow.selectedView.current_screen.form.cancelField.bind(on_press=self.getUpcomingBillsView)
+        self.mainWindow.selectedView.current_screen.form.submitField.bind(on_press=self.saveEditBillView)
+        self.mainWindow.selectedView.current_screen.deleteButton.bind(on_press = self.deleteBillInstance)
+        self.mainWindow.selectedView.current_screen.deleteFutureButton.bind(on_press=self.deleteBillType)
 
+    def saveEditBillView(self,obj):
+        form = self.mainWindow.selectedView.current_screen.form
+        billObj = self.mainWindow.selectedView.current_screen.billObj
+        billTypeObj = self.mainWindow.selectedView.current_screen.billTypeObj
+        ## Make changes to bill object
+        billObj.name = form.nameField.text
+        billObj.amount = float(form.amountField.text)
+        billObj.dueDate = form.nextDueField.getDateValue().isoformat()
+        billObj.category = int(form.categoryField.text)
+        billObj.constant = int(form.constantField.active)
+        ## Make changes to billType object (if applicable)
+        if billTypeObj:
+            billTypeObj.name = form.nameField.text
+            billTypeObj.amount = float(form.amountField.text)
+            billTypeObj.category = int(form.categoryField.text)
+            billTypeObj.constant = int(form.constantField.active)
+        ## Make changes in db
+        if billTypeObj:
+            QueryBillType.simpleEdit(billTypeObj)
+            QueryBillsAndIncome.simpleEditByType(billObj)
+        else:
+            QueryBillsAndIncome.simpleEdit(billObj)
+        self.getUpcomingBillsView()
+
+    def deleteBillInstance(self,obj):
+        print("Delete Bill Instance")
+
+    def deleteBillType(self,obj):
+        print("Delete Bill Type")
 
 ## Setup the db (duh...)
 db_setup()
@@ -166,4 +260,5 @@ load_test_data()
 
 if __name__ == '__main__':
     Window.size=(800,800)
-    BudgetApp().run()
+    app = BudgetApp()
+    app.run()

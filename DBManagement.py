@@ -67,7 +67,8 @@ class QueryBillType():
         con = sqlite3.connect("KivyBudget.db")
         cur = con.cursor()
         cur.execute("SELECT * FROM BillType WHERE id = "+str(id))
-        res = cur.fetchone()
+        raw_data = cur.fetchone()
+        res = BillType(raw_data[1],raw_data[2],raw_data[3],raw_data[4],raw_data[5],raw_data[6],raw_data[7],raw_data[8],raw_data[9],raw_data[0])
         cur.close()
         con.close()
         return res
@@ -106,12 +107,22 @@ class QueryBillType():
         con.commit()
         con.close()
 
+    def simpleEdit(billTypeObj):
+        sqlString = f"UPDATE BillType SET name='{billTypeObj.name}',amount={billTypeObj.amount},category={billTypeObj.category},constant={billTypeObj.constant} WHERE id={billTypeObj.id}"
+        con=sqlite3.connect("KivyBudget.db")
+        cur = con.cursor()
+        cur.execute(sqlString)
+        cur.close()
+        con.commit()
+        con.close()
+
 class QueryBillsAndIncome():
     def byId(id):
         con = sqlite3.connect("KivyBudget.db")
         cur = con.cursor()
         cur.execute("SELECT * FROM BillsAndIncome WHERE id = "+str(id))
-        res = cur.fetchone()
+        row = cur.fetchone()
+        res = Bill(row[1],row[2],row[3],row[4],row[5],row[6],row[0])
         cur.close()
         con.close()
         return res
@@ -185,6 +196,24 @@ class QueryBillsAndIncome():
         con = sqlite3.connect("KivyBudget.db")
         cur = con.cursor()
         cur.execute("DELETE FROM BillsAndIncome WHERE id in "+setOfIds)
+        cur.close()
+        con.commit()
+        con.close()
+
+    def simpleEdit(billObj):
+        sqlString=f"UPDATE BillsAndIncome SET name='{billObj.name}',amount={billObj.amount},category={billObj.category},constant={billObj.constant} WHERE id = {billObj.id}"
+        con=sqlite3.connect("KivyBudget.db")
+        cur = con.cursor()
+        cur.execute(sqlString)
+        cur.close()
+        con.commit()
+        con.close()
+
+    def simpleEditByType(billObj):
+        sqlString=f"UPDATE BillsAndIncome SET name='{billObj.name}',amount={billObj.amount},category={billObj.category},constant={billObj.constant} WHERE (billTypeId={billObj.billTypeId} AND dueDate>='{billObj.dueDate}')"
+        con=sqlite3.connect("KivyBudget.db")
+        cur = con.cursor()
+        cur.execute(sqlString)
         cur.close()
         con.commit()
         con.close()
