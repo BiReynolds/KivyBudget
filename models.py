@@ -5,6 +5,7 @@ class IncType(Enum):
     DAY = 0
     MONTH = 1
     YEAR = 2
+    NONE = -1
 
 class BillType():
     def __init__(self,name,amount,nextDue,incType=IncType.MONTH.value,incDays=None,incMonths=1,incYears=None,category=0,constant=1,id=None):

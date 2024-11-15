@@ -13,6 +13,7 @@
     titleLabel:titleLabel
     amountInput:amountInput
     saveButton:saveButton
+    addBillButton:addBillButton
     orientation: 'horizontal'
 
     Label:
@@ -27,7 +28,7 @@
 
     MoneyInput:
         id:amountInput
-        text: '1000.00'
+        text: ''
         multiline: False
         size_hint: 2/7,0.35
         pos_hint:{'x':0.5,'center_y':0.5}
@@ -35,8 +36,13 @@
     Button:
         id: saveButton
         text: 'Save Changes'
-        size_hint: 2/7,0.35
-        center_y:self.center_y
+        size_hint: 1/7,0.35
+        pos_hint:{'x':0.5,'center_y':0.5}
+
+    Button:
+        id: addBillButton
+        text: 'Add New Bill'
+        size_hint: 1/7, 0.35
         pos_hint:{'x':0.5,'center_y':0.5}
 
 <SideBar>:

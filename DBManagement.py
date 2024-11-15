@@ -73,16 +73,21 @@ class QueryBillType():
         return res
     
     def insertOne(billTypeObj):
-        insertString = f"INSERT INTO BillType (name,amount,nextDue,incType,incDays,incMonths,incYears,category,constant) VALUES ({billTypeObj.name},{billTypeObj.amount},{billTypeObj.nextDue},{billTypeObj.incType},{billTypeObj.incDays},{billTypeObj.incMonths},{billTypeObj.incYears},{billTypeObj.category},{billTypeObj.constant})"
+        insertString = f"INSERT INTO BillType (name,amount,nextDue,incType,incDays,incMonths,incYears,category,constant) VALUES ('{billTypeObj.name}',{billTypeObj.amount},'{billTypeObj.nextDue}',{billTypeObj.incType},{billTypeObj.incDays},{billTypeObj.incMonths},{billTypeObj.incYears},{billTypeObj.category},{billTypeObj.constant})"
         con = sqlite3.connect("KivyBudget.db")
         cur = con.cursor()
         try:
             cur.execute(insertString)
+            cur.execute("SELECT last_insert_rowid()")
+            lastIndex = cur.fetchone()[0]
         except sqlite3.Error as er:
             print(f"Could not insert {billTypeObj.name} into table BillType.  Error received: ",er)
+            lastIndex = -1
         cur.close()
         con.commit()
         con.close()
+        print(lastIndex)
+        return lastIndex
 
     def insertmany(billTypeObjs):
         insertString = "INSERT INTO BillType (name,amount,nextDue,incType,incDays,incMonths,incYears,category,constant) VALUES (?,?,?,?,?,?,?,?,?)"
@@ -129,14 +134,31 @@ class QueryBillsAndIncome():
         for dueDate in dateString[1:]:
             queryString += ",'"+dueDate+"'"
         queryString += ")"
-        con = sqlite3.connect("KivyBudget.db")
-        cur = con.cursor()
-        cur.execute(queryString)
-        result = cur.fetchall()
+        try:
+            con = sqlite3.connect("KivyBudget.db")
+            cur = con.cursor()
+            cur.execute(queryString)
+            result = cur.fetchall()
+        except:
+            print(queryString)
+            result = 0
         cur.close()
         con.close()
         return result
     
+    def insertOne(billObj):
+        insertString = f"INSERT INTO BillsAndIncome (billTypeId, name, amount, dueDate, category, constant) VALUES ({billObj.billTypeId},'{billObj.name}',{billObj.amount},'{billObj.dueDate}',{billObj.category},{billObj.constant})"
+        con = sqlite3.connect("KivyBudget.db")
+        cur = con.cursor()
+        try:
+            cur.execute(insertString)
+        except sqlite3.Error as er:
+            print(f"Could not insert {billObj.name} into table BillsAndIncome.  Error received: ",er)
+        cur.close()
+        con.commit()
+        con.close()
+        return 
+
     def mergeBills(billObjs):
         billDates = [bill.dueDate for bill in billObjs]
         existingBillDates = [row[0] for row in QueryBillsAndIncome.byBillTypeIdAndDueDates(billObjs[0].billTypeId,billDates)]
