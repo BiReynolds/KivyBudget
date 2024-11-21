@@ -68,7 +68,10 @@ class QueryBillType():
         cur = con.cursor()
         cur.execute("SELECT * FROM BillType WHERE id = "+str(id))
         raw_data = cur.fetchone()
-        res = BillType(raw_data[1],raw_data[2],raw_data[3],raw_data[4],raw_data[5],raw_data[6],raw_data[7],raw_data[8],raw_data[9],raw_data[0])
+        if raw_data:
+            res = BillType(raw_data[1],raw_data[2],raw_data[3],raw_data[4],raw_data[5],raw_data[6],raw_data[7],raw_data[8],raw_data[9],raw_data[0])
+        else:
+            return None
         cur.close()
         con.close()
         return res
@@ -112,6 +115,15 @@ class QueryBillType():
         con=sqlite3.connect("KivyBudget.db")
         cur = con.cursor()
         cur.execute(sqlString)
+        cur.close()
+        con.commit()
+        con.close()
+
+    def deleteById(billTypeId):
+        deleteStatement = f"DELETE FROM BillType WHERE id = {billTypeId}"
+        con = sqlite3.connect("KivyBudget.db")
+        cur = con.cursor()
+        cur.execute(deleteStatement)
         cur.close()
         con.commit()
         con.close()
@@ -217,6 +229,25 @@ class QueryBillsAndIncome():
         cur.close()
         con.commit()
         con.close()
+
+    def deleteById(billId):
+        deleteStatement = f"DELETE FROM BillsAndIncome WHERE id = {billId}"
+        con = sqlite3.connect("KivyBudget.db")
+        cur = con.cursor()
+        cur.execute(deleteStatement)
+        cur.close()
+        con.commit()
+        con.close()
+
+    def deleteByBillTypeId(billTypeId, deleteBillsAfterDate = '2000-01-01'):
+        deleteStatement = f"DELETE FROM BillsAndIncome WHERE billTypeId = {billTypeId} AND dueDate >= '{deleteBillsAfterDate}'"
+        con = sqlite3.connect("KivyBudget.db")
+        cur = con.cursor()
+        cur.execute(deleteStatement)
+        cur.close()
+        con.commit()
+        con.close()
+
 
 ## Likely a temporary class which will be replaced when we add better user support
 class GetUserInfo():

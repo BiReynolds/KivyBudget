@@ -41,6 +41,7 @@ class EditBillView(Screen):
         billObj = QueryBillsAndIncome.byId(billId)
         billTypeObj = None
         if billObj.billTypeId:
+            print(billObj.billTypeId)
             billTypeObj = QueryBillType.byId(billObj.billTypeId)
         self.billObj = billObj
         self.billTypeObj = billTypeObj
@@ -221,7 +222,7 @@ class BudgetApp(App):
         self.mainWindow.selectedView.current_screen.form.cancelField.bind(on_press=self.getUpcomingBillsView)
         self.mainWindow.selectedView.current_screen.form.submitField.bind(on_press=self.saveEditBillView)
         self.mainWindow.selectedView.current_screen.deleteButton.bind(on_press = self.deleteBillInstance)
-        self.mainWindow.selectedView.current_screen.deleteFutureButton.bind(on_press=self.deleteBillType)
+        self.mainWindow.selectedView.current_screen.deleteFutureButton.bind(on_press=self.deleteBillTypeAfterDate)
 
     def saveEditBillView(self,obj):
         form = self.mainWindow.selectedView.current_screen.form
@@ -248,10 +249,20 @@ class BudgetApp(App):
         self.getUpcomingBillsView()
 
     def deleteBillInstance(self,obj):
-        print("Delete Bill Instance")
+        deletedBillId = self.mainWindow.selectedView.current_screen.billObj.id
+        QueryBillsAndIncome.deleteById(deletedBillId)
+        self.getUpcomingBillsView()
 
-    def deleteBillType(self,obj):
-        print("Delete Bill Type")
+    def deleteBillTypeAfterDate(self,obj):
+        deletedBillTypeId = self.mainWindow.selectedView.current_screen.billObj.billTypeId
+        cutoffDate = self.mainWindow.selectedView.current_screen.billObj.dueDate
+        if deletedBillTypeId:
+            QueryBillType.deleteById(deletedBillTypeId)
+            QueryBillsAndIncome.deleteByBillTypeId(deletedBillTypeId,cutoffDate)
+            self.getUpcomingBillsView()
+        else:
+            print("This is not a recurring bill; to delete the single instance, use the other delete button.")
+
 
 ## Setup the db (duh...)
 db_setup()
