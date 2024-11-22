@@ -100,7 +100,7 @@ class DateField(BoxLayout):
 class MoneyInput(TextInput):
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
-        self.pat = re.compile('[^0-9]')
+        self.pat = re.compile('-[^0-9]')
         self.multiline = False
         self.write_tab = False
 
